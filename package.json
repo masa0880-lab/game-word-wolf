@@ -1,0 +1,20 @@
+{
+  "name": "game-word-wolf",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "スマホ1台を回して遊ぶワードウルフ パーティーゲーム",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.7"
+  }
+}
