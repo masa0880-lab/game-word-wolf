@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { ConfirmDialog } from "./Modal.jsx";
+import { drawQuestion } from "../questions.js";
 
 // 残り時間を mm:ss にフォーマット
 function formatTime(sec) {
@@ -35,9 +36,10 @@ function notifyEnd() {
 }
 
 // 議論フェーズ
-export default function DiscussionScreen({ seconds, onDone, onQuit }) {
+export default function DiscussionScreen({ seconds, firstSpeaker, scores, onDone, onQuit }) {
   const [remaining, setRemaining] = useState(seconds);
   const [showQuit, setShowQuit] = useState(false);
+  const [question, setQuestion] = useState(() => drawQuestion());
   const endedRef = useRef(false);
 
   // 1秒ごとのカウントダウン
@@ -63,12 +65,28 @@ export default function DiscussionScreen({ seconds, onDone, onQuit }) {
       <h2 className="discussion-title">議論タイム</h2>
       <p className="discussion-sub">お題について話そう（お題の単語は言わない！）</p>
 
+      <div className="speaker-card" aria-live="polite">
+        <span>🎤 第一発言者</span>
+        <strong>{firstSpeaker?.name ?? "プレイヤー"} さん</strong>
+      </div>
+
+      <section className="question-card" aria-labelledby="question-title">
+        <p id="question-title">💬 困ったときの質問カード</p>
+        <strong>{question.text}</strong>
+        <button
+          className="btn-text"
+          onClick={() => setQuestion(drawQuestion(question.index))}
+        >
+          別の質問を引く
+        </button>
+      </section>
+
       <div className={`timer ${isUrgent ? "timer-urgent" : ""} ${remaining <= 0 ? "timer-done" : ""}`}>
         {remaining > 0 ? formatTime(remaining) : "終了！"}
       </div>
 
       <p className="discussion-note">
-        ⚠️ リロードするとゲームは最初からになります
+        通算 {scores.rounds}戦：市民 {scores.citizen}勝 / ウルフ {scores.wolf}勝
       </p>
 
       <button
@@ -76,7 +94,7 @@ export default function DiscussionScreen({ seconds, onDone, onQuit }) {
         onClick={onDone}
         disabled={remaining <= 0}
       >
-        議論を終了して投票へ
+        議論を終了して最終弁明へ
       </button>
       <button className="btn-text" onClick={() => setShowQuit(true)}>
         ゲームをやめる

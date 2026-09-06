@@ -9,11 +9,14 @@ export default function ResultScreen({
   citizenWord,
   wolfWord,
   reversalRule,
+  reversalResult,
+  scores,
+  isRunoff,
+  onReversalResult,
   onRematch,
   onRestart,
 }) {
   const [stage, setStage] = useState("drumroll"); // "drumroll" | "reveal"
-  const [reversalResult, setReversalResult] = useState(null); // null | "hit" | "miss"
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
 
   // 集計と一次判定（投票が変わらない限り再計算しない）
@@ -74,7 +77,9 @@ export default function ResultScreen({
         <h3 className="result-heading">投票の結果</h3>
         {tally.isTie ? (
           <p className="result-eject tie">
-            最多票が同数（同票）→ デフォルトルールでウルフの勝ち
+            {isRunoff
+              ? "再投票も同票 → ウルフが逃げ切り！"
+              : "最多票が同数でした"}
           </p>
         ) : (
           <p className="result-eject">
@@ -96,13 +101,13 @@ export default function ResultScreen({
           <div className="confirm-actions">
             <button
               className="btn btn-danger"
-              onClick={() => setReversalResult("miss")}
+              onClick={() => onReversalResult("miss")}
             >
               外した
             </button>
             <button
               className="btn btn-primary"
-              onClick={() => setReversalResult("hit")}
+              onClick={() => onReversalResult("hit")}
             >
               当てた（逆転！）
             </button>
@@ -146,6 +151,13 @@ export default function ResultScreen({
             </li>
           ))}
         </ul>
+      </section>
+
+      <section className="score-board" aria-label="連戦スコア">
+        <span>通算 {scores.rounds}戦</span>
+        <strong>市民 {scores.citizen}</strong>
+        <span>―</span>
+        <strong>{scores.wolf} ウルフ</strong>
       </section>
 
       <div className="result-actions">
