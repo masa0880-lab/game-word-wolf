@@ -1,11 +1,13 @@
 import { useReducer, useCallback } from "react";
-import { assignRoles } from "./game.js";
+import { assignRoles, addRoundScore, judge, pickFirstSpeaker, tallyVotes } from "./game.js";
 import TitleScreen from "./components/TitleScreen.jsx";
 import SetupScreen from "./components/SetupScreen.jsx";
 import RevealScreen from "./components/RevealScreen.jsx";
 import DiscussionScreen from "./components/DiscussionScreen.jsx";
 import VoteScreen from "./components/VoteScreen.jsx";
 import ResultScreen from "./components/ResultScreen.jsx";
+import FinalDefenseScreen from "./components/FinalDefenseScreen.jsx";
+import TieBreakScreen from "./components/TieBreakScreen.jsx";
 
 // 既定の設定
 const defaultSettings = {
@@ -18,13 +20,18 @@ const defaultSettings = {
 };
 
 const initialState = {
-  phase: "title", // title → setup → reveal → discussion → vote → result
+  phase: "title", // title → setup → reveal → discussion → defense → vote → result
   settings: defaultSettings,
   players: [], // { name, isWolf, topic }
   citizenWord: "",
   wolfWord: "",
-  lastPairKey: null, // 連続出題回避用
+  usedPairKeys: [], // 同一セッションの使用済みお題
+  firstSpeakerIndex: null,
   votes: [], // voterIndex -> votedPlayerIndex
+  voteRound: 0,
+  runoffCandidates: [],
+  scores: { citizen: 0, wolf: 0, rounds: 0 },
+  reversalResult: null,
 };
 
 // 名前が空ならデフォルト名（プレイヤーN）を補う
@@ -35,10 +42,36 @@ function resolveNames(names, count) {
   });
 }
 
+function beginRound(state, names) {
+  const { settings } = state;
+  const { players, citizenWord, wolfWord, pairKey } = assignRoles(
+    names,
+    settings.wolfCount,
+    settings.category,
+    state.usedPairKeys
+  );
+  const usedPairKeys = state.usedPairKeys.includes(pairKey)
+    ? [pairKey]
+    : [...state.usedPairKeys, pairKey];
+  return {
+    ...state,
+    phase: "reveal",
+    players,
+    citizenWord,
+    wolfWord,
+    usedPairKeys,
+    firstSpeakerIndex: pickFirstSpeaker(players.length),
+    votes: new Array(players.length).fill(null),
+    voteRound: 0,
+    runoffCandidates: [],
+    reversalResult: null,
+  };
+}
+
 function reducer(state, action) {
   switch (action.type) {
     case "GO_TITLE":
-      return { ...initialState, lastPairKey: state.lastPairKey };
+      return { ...initialState, usedPairKeys: state.usedPairKeys };
 
     case "GO_SETUP":
       return { ...state, phase: "setup" };
@@ -50,51 +83,61 @@ function reducer(state, action) {
     case "START_GAME": {
       const { settings } = state;
       const names = resolveNames(settings.names, settings.playerCount);
-      const { players, citizenWord, wolfWord, pairKey } = assignRoles(
-        names,
-        settings.wolfCount,
-        settings.category,
-        state.lastPairKey
-      );
-      return {
-        ...state,
-        phase: "reveal",
-        players,
-        citizenWord,
-        wolfWord,
-        lastPairKey: pairKey,
-        votes: new Array(players.length).fill(null),
-      };
+      return beginRound(state, names);
     }
 
     case "GO_DISCUSSION":
       return { ...state, phase: "discussion" };
 
+    case "GO_DEFENSE":
+      return { ...state, phase: "defense" };
+
     case "GO_VOTE":
       return { ...state, phase: "vote", votes: new Array(state.players.length).fill(null) };
 
-    case "SUBMIT_VOTES":
-      return { ...state, phase: "result", votes: action.payload };
+    case "SUBMIT_VOTES": {
+      const tally = tallyVotes(action.payload, state.players);
+      if (tally.isTie && state.voteRound === 0) {
+        return {
+          ...state,
+          phase: "tiebreak",
+          votes: action.payload,
+          runoffCandidates: tally.topIndices,
+        };
+      }
+      const result = judge(tally, state.players, state.settings.reversalRule);
+      return {
+        ...state,
+        phase: "result",
+        votes: action.payload,
+        scores: result.winner === "pending"
+          ? state.scores
+          : addRoundScore(state.scores, result.winner),
+      };
+    }
+
+    case "START_RUNOFF":
+      return {
+        ...state,
+        phase: "vote",
+        voteRound: 1,
+        votes: new Array(state.players.length).fill(null),
+      };
+
+    case "RESOLVE_REVERSAL": {
+      if (state.reversalResult) return state;
+      const winner = action.payload === "hit" ? "wolf" : "citizen";
+      return {
+        ...state,
+        reversalResult: action.payload,
+        scores: addRoundScore(state.scores, winner),
+      };
+    }
 
     // 同じメンバーで再戦（設定を引き継ぎ、役割を再割り当て）
     case "REMATCH": {
-      const { settings } = state;
       const names = state.players.map((p) => p.name);
-      const { players, citizenWord, wolfWord, pairKey } = assignRoles(
-        names,
-        settings.wolfCount,
-        settings.category,
-        state.lastPairKey
-      );
-      return {
-        ...state,
-        phase: "reveal",
-        players,
-        citizenWord,
-        wolfWord,
-        lastPairKey: pairKey,
-        votes: new Array(players.length).fill(null),
-      };
+      return beginRound(state, names);
     }
 
     default:
@@ -135,8 +178,19 @@ export default function App() {
       screen = (
         <DiscussionScreen
           seconds={state.settings.timeSeconds}
-          onDone={() => go("GO_VOTE")}
+          firstSpeaker={state.players[state.firstSpeakerIndex]}
+          scores={state.scores}
+          onDone={() => go("GO_DEFENSE")}
           onQuit={() => go("GO_TITLE")}
+        />
+      );
+      break;
+    case "defense":
+      screen = (
+        <FinalDefenseScreen
+          players={state.players}
+          firstSpeakerIndex={state.firstSpeakerIndex}
+          onDone={() => go("GO_VOTE")}
         />
       );
       break;
@@ -144,7 +198,18 @@ export default function App() {
       screen = (
         <VoteScreen
           players={state.players}
+          candidateIndices={state.voteRound === 1 ? state.runoffCandidates : null}
+          isRunoff={state.voteRound === 1}
           onSubmit={(votes) => go("SUBMIT_VOTES", votes)}
+        />
+      );
+      break;
+    case "tiebreak":
+      screen = (
+        <TieBreakScreen
+          players={state.players}
+          candidateIndices={state.runoffCandidates}
+          onDone={() => go("START_RUNOFF")}
         />
       );
       break;
@@ -156,6 +221,10 @@ export default function App() {
           citizenWord={state.citizenWord}
           wolfWord={state.wolfWord}
           reversalRule={state.settings.reversalRule}
+          reversalResult={state.reversalResult}
+          scores={state.scores}
+          isRunoff={state.voteRound === 1}
+          onReversalResult={(result) => go("RESOLVE_REVERSAL", result)}
           onRematch={() => go("REMATCH")}
           onRestart={() => go("GO_TITLE")}
         />

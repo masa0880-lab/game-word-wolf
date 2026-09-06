@@ -54,6 +54,8 @@ export default function RevealScreen({ players, onDone }) {
       <p className="view-name">{player.name} さんのお題</p>
 
       <button
+        type="button"
+        aria-label={holding ? `${player.name}さんのお題を表示中` : "押している間だけお題を表示"}
         className={`reveal-hold ${holding ? "holding" : ""}`}
         onPointerDown={() => setHolding(true)}
         onPointerUp={() => setHolding(false)}

@@ -3,7 +3,7 @@ import { useState } from "react";
 // 投票フェーズ（スマホ回し）
 // 自分には投票できない。投票後すぐ次の人への受け渡し画面を挟み、
 // 前の人の投票内容が見えないようにする。
-export default function VoteScreen({ players, onSubmit }) {
+export default function VoteScreen({ players, candidateIndices, isRunoff = false, onSubmit }) {
   const [voter, setVoter] = useState(0);
   const [subPhase, setSubPhase] = useState("pass"); // "pass" | "vote"
   const [votes, setVotes] = useState(() => new Array(players.length).fill(null));
@@ -34,7 +34,7 @@ export default function VoteScreen({ players, onSubmit }) {
     return (
       <div className="vote-screen pass">
         <div className="pass-card">
-          <p className="pass-count">投票 {voter + 1} / {players.length} 人目</p>
+          <p className="pass-count">{isRunoff ? "再投票" : "投票"} {voter + 1} / {players.length} 人目</p>
           <span className="pass-emoji">🗳️</span>
           <h2 className="pass-name">{current.name} さん</h2>
           <p className="pass-instruction">に渡してください</p>
@@ -50,12 +50,12 @@ export default function VoteScreen({ players, onSubmit }) {
   // ── 投票画面 ──
   return (
     <div className="vote-screen choose">
-      <h2 className="vote-title">{current.name} さんの投票</h2>
-      <p className="vote-sub">ウルフだと思う人をタップ</p>
+      <h2 className="vote-title">{current.name} さんの{isRunoff ? "再投票" : "投票"}</h2>
+      <p className="vote-sub">{isRunoff ? "同票候補から選んでください" : "ウルフだと思う人をタップ"}</p>
 
       <div className="vote-list">
         {players.map((p, i) =>
-          i === voter ? null : (
+          i === voter || (candidateIndices && !candidateIndices.includes(i)) ? null : (
             <button
               key={i}
               className="vote-option"

@@ -755,3 +755,97 @@ body {
   gap: 12px;
   margin-top: 4px;
 }
+
+/* ── ゲーム演出カード ── */
+.speaker-card,
+.question-card {
+  width: 100%;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.speaker-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(255, 77, 157, 0.14);
+  border: 1px solid rgba(255, 77, 157, 0.35);
+}
+.speaker-card strong { font-size: 18px; }
+.question-card {
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.question-card p { color: var(--text-dim); font-size: 13px; }
+.question-card strong { display: block; font-size: 18px; margin: 6px 0; }
+.question-card .btn-text { padding-bottom: 0; }
+
+/* ── 最終弁明・同票延長 ── */
+.defense-screen,
+.tiebreak-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  gap: 18px;
+}
+.phase-kicker { color: var(--accent-2); font-weight: 800; }
+.defense-screen h2,
+.tiebreak-screen h2 { font-size: 30px; }
+.defense-progress { color: var(--text-dim); }
+.defense-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 28px 18px;
+  border-radius: 24px;
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.defense-card strong { font-size: 30px; }
+.defense-card > span:not(.defense-time) { color: var(--text-dim); }
+.defense-time { font-size: 50px; font-weight: 900; color: var(--ok); }
+.defense-time.urgent { color: var(--danger); }
+.tiebreak-emoji { font-size: 76px; }
+.tiebreak-names { font-size: 22px; font-weight: 800; }
+.tiebreak-copy { color: var(--text-dim); line-height: 1.8; }
+.rule-note {
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255, 85, 102, 0.12);
+  color: #ff9aa5;
+}
+
+.score-board {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.14), rgba(255, 77, 157, 0.14));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.score-board span:first-child { flex-basis: 100%; color: var(--text-dim); text-align: center; }
+
+:focus-visible {
+  outline: 3px solid #ffd166;
+  outline-offset: 3px;
+}
+
+@media (max-height: 720px) {
+  .discussion-screen { justify-content: flex-start; gap: 10px; }
+  .timer { font-size: 64px; margin: 4px 0; }
+  .question-card { padding: 10px 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

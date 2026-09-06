@@ -22,14 +22,13 @@ export function pairKey(pair) {
   return [pair.citizen, pair.wolf].sort().join("⇔");
 }
 
-// お題ペアを1つ選ぶ。直前と同じペアは避ける。
-export function pickTopicPair(category, lastKey) {
+// お題ペアを1つ選ぶ。カテゴリ内を使い切るまで同じペアを避ける。
+export function pickTopicPair(category, usedKeys = []) {
   const pool = getTopicPool(category);
-  let candidates = pool;
-  if (lastKey && pool.length > 1) {
-    const filtered = pool.filter((p) => pairKey(p) !== lastKey);
-    if (filtered.length > 0) candidates = filtered;
-  }
+  const used = new Set(Array.isArray(usedKeys) ? usedKeys : [usedKeys].filter(Boolean));
+  const unused = pool.filter((p) => !used.has(pairKey(p)));
+  // 全問使い切ったら新しい周回としてリセットする。
+  const candidates = unused.length > 0 ? unused : pool;
   const base = candidates[randInt(candidates.length)];
   // どちらの語を「市民側」「ウルフ側」にするかを毎回ランダムに入れ替える
   const swap = Math.random() < 0.5;
@@ -39,8 +38,8 @@ export function pickTopicPair(category, lastKey) {
 }
 
 // プレイヤーへお題とウルフ役を割り当てる
-export function assignRoles(names, wolfCount, category, lastKey) {
-  const { citizenWord, wolfWord, key } = pickTopicPair(category, lastKey);
+export function assignRoles(names, wolfCount, category, usedKeys = []) {
+  const { citizenWord, wolfWord, key } = pickTopicPair(category, usedKeys);
   const wolfIndices = new Set(pickDistinctIndices(names.length, wolfCount));
 
   const players = names.map((name, i) => {
@@ -53,6 +52,22 @@ export function assignRoles(names, wolfCount, category, lastKey) {
   });
 
   return { players, citizenWord, wolfWord, pairKey: key };
+}
+
+// ランダムな第一発言者を返す。
+export function pickFirstSpeaker(playerCount) {
+  if (!Number.isInteger(playerCount) || playerCount <= 0) return null;
+  return randInt(playerCount);
+}
+
+// 勝者側へ1点を加算する（連戦スコア用）。
+export function addRoundScore(scores, winner) {
+  if (winner !== "citizen" && winner !== "wolf") return scores;
+  return {
+    ...scores,
+    [winner]: scores[winner] + 1,
+    rounds: scores.rounds + 1,
+  };
 }
 
 // 投票を集計して結果を返す
