@@ -6,21 +6,28 @@ export default function FinalDefenseScreen({ players, firstSpeakerIndex, onDone 
   const order = players.map((_, offset) => (firstSpeakerIndex + offset) % players.length);
   const [turn, setTurn] = useState(0);
   const [remaining, setRemaining] = useState(SECONDS_PER_PERSON);
+  const [isRunning, setIsRunning] = useState(false);
   const isLast = turn === order.length - 1;
 
   useEffect(() => {
-    if (remaining <= 0) return;
+    if (!isRunning || remaining <= 0) return;
     const timer = setTimeout(() => setRemaining((value) => value - 1), 1000);
     return () => clearTimeout(timer);
-  }, [remaining]);
+  }, [isRunning, remaining]);
 
-  function next() {
+  function handlePrimaryAction() {
+    if (!isRunning) {
+      setIsRunning(true);
+      return;
+    }
+
     if (isLast) {
       onDone();
       return;
     }
     setTurn((value) => value + 1);
     setRemaining(SECONDS_PER_PERSON);
+    setIsRunning(false);
   }
 
   const player = players[order[turn]];
@@ -35,9 +42,16 @@ export default function FinalDefenseScreen({ players, firstSpeakerIndex, onDone 
         <span className={remaining <= 5 ? "defense-time urgent" : "defense-time"}>
           {remaining}秒
         </span>
+        {!isRunning && <span className="defense-ready">準備ができたら開始してください</span>}
       </div>
-      <button className="btn btn-primary btn-large" onClick={next}>
-        {isLast ? "投票へ進む" : remaining === 0 ? "次の人へ" : "話し終えた"}
+      <button className="btn btn-primary btn-large" onClick={handlePrimaryAction}>
+        {!isRunning
+          ? "弁明開始"
+          : isLast
+            ? "投票へ進む"
+            : remaining === 0
+              ? "次の人へ"
+              : "話し終えた"}
       </button>
     </div>
   );

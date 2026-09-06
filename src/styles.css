@@ -807,6 +807,7 @@ body {
 .defense-card > span:not(.defense-time) { color: var(--text-dim); }
 .defense-time { font-size: 50px; font-weight: 900; color: var(--ok); }
 .defense-time.urgent { color: var(--danger); }
+.defense-card .defense-ready { color: var(--accent-2); font-weight: 800; }
 .tiebreak-emoji { font-size: 76px; }
 .tiebreak-names { font-size: 22px; font-weight: 800; }
 .tiebreak-copy { color: var(--text-dim); line-height: 1.8; }
