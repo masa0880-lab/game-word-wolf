@@ -70,6 +70,15 @@ export default function DiscussionScreen({ seconds, firstSpeaker, scores, onDone
         <strong>{firstSpeaker?.name ?? "プレイヤー"} さん</strong>
       </div>
 
+      <section className="discussion-guide" aria-labelledby="discussion-guide-title">
+        <p id="discussion-guide-title">🗣️ 話し方の流れ</p>
+        <ol>
+          <li><strong>最初の人</strong>：お題を言わず、特徴を一言</li>
+          <li><strong>一巡する</strong>：時計回りに全員が1回ずつ話す</li>
+          <li><strong>自由討論</strong>：怪しい人を探して質問しよう</li>
+        </ol>
+      </section>
+
       <section className="question-card" aria-labelledby="question-title">
         <p id="question-title">💬 困ったときの質問カード</p>
         <strong>{question.text}</strong>
