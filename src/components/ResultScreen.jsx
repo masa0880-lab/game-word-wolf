@@ -61,6 +61,7 @@ export default function ResultScreen({
     wolf: { label: "ウルフの勝ち！", cls: "win-wolf", emoji: "🐺" },
   };
   const showWinner = finalWinner !== "pending" ? winnerInfo[finalWinner] : null;
+  const isRoundResolved = baseJudge.winner !== "pending" || reversalResult !== null;
 
   return (
     <div className="result-screen reveal">
@@ -153,24 +154,28 @@ export default function ResultScreen({
         </ul>
       </section>
 
-      <section className="score-board" aria-label="連戦スコア">
-        <span>通算 {scores.rounds}戦</span>
-        <strong>市民 {scores.citizen}</strong>
-        <span>―</span>
-        <strong>{scores.wolf} ウルフ</strong>
-      </section>
+      {isRoundResolved && (
+        <>
+          <section className="score-board" aria-label="連戦スコア">
+            <span>通算 {scores.rounds}戦</span>
+            <strong>市民 {scores.citizen}</strong>
+            <span>―</span>
+            <strong>{scores.wolf} ウルフ</strong>
+          </section>
 
-      <div className="result-actions">
-        <button className="btn btn-primary btn-large" onClick={onRematch}>
-          同じメンバーでもう一度
-        </button>
-        <button
-          className="btn btn-secondary"
-          onClick={() => setShowRestartConfirm(true)}
-        >
-          最初から
-        </button>
-      </div>
+          <div className="result-actions">
+            <button className="btn btn-primary btn-large" onClick={onRematch}>
+              同じメンバーでもう一度
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={() => setShowRestartConfirm(true)}
+            >
+              最初から
+            </button>
+          </div>
+        </>
+      )}
 
       <ConfirmDialog
         open={showRestartConfirm}
