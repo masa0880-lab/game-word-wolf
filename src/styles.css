@@ -758,6 +758,7 @@ body {
 
 /* ── ゲーム演出カード ── */
 .speaker-card,
+.discussion-guide,
 .question-card {
   width: 100%;
   border-radius: var(--radius);
@@ -772,6 +773,26 @@ body {
   border: 1px solid rgba(255, 77, 157, 0.35);
 }
 .speaker-card strong { font-size: 18px; }
+.discussion-guide {
+  text-align: left;
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.28);
+}
+.discussion-guide p {
+  color: var(--ok);
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.discussion-guide ol {
+  display: grid;
+  gap: 5px;
+  padding-left: 22px;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.discussion-guide strong { color: var(--text); }
 .question-card {
   background: var(--card);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -839,6 +860,8 @@ body {
 @media (max-height: 720px) {
   .discussion-screen { justify-content: flex-start; gap: 10px; }
   .timer { font-size: 64px; margin: 4px 0; }
+  .discussion-guide { padding: 10px 14px; }
+  .discussion-guide ol { gap: 2px; }
   .question-card { padding: 10px 14px; }
 }
 
